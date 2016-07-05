@@ -215,6 +215,7 @@
 	       (calc . t)
 	       (ditaa .t)
 	       (octave .t)
+               (org .t)
 	       (lisp .t)))
 	    (setq org-latex-listings 'minted)
 	    (setq org-latex-minted-options
@@ -464,6 +465,16 @@ Phone: +33(0)5 34 32 39 22
 )
 #+END_SRC
 ** Hideshow
+#+BEGIN_SRC emacs-lisp
+(use-package hideshow
+  :ensure t
+  :bind (("C-c <left>" . hs-toggle-hiding)
+	 ("C-c <right>" . hs-show-block)
+	 )
+  :init (add-hook 'prog-mode-hook #'hs-minor-mode)
+  )
+
+#+END_SRC
 * Misc
 ** EMMS
 Listen musing whith EMACS !
