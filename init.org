@@ -5,25 +5,31 @@
 * Initialization
 ** Initialize init file
 #+BEGIN_SRC emacs-lisp
+;; Keep track of loading time
+(defconst emacs-start-time (current-time))
 (require 'package)
+(package-initialize)
+
 (setq package-check-signature nil)
 (setq package-enable-at-startup nil)
 (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-			 ("marmalade" . "https://marmalade-repo.org/packages/")
-			 ("melpa" . "http://melpa.org/packages/")))
+			 ("melpa" . "http://melpa.org/packages/")
+			 ("org" . "http://orgmode.org/elpa/")))
 
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
-(package-initialize)
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+(let ((elapsed (float-time (time-subtract (current-time) emacs-start-time))))
+  (message "Loaded packages in %.3fs" elapsed))
+
+(require 'cl-lib)
 
 #+END_SRC
 ** Install package with use-package
 #+BEGIN_SRC emacs-lisp
 (defvar mf/install-packages
-  '(;;Editor configuration
+  '(
+    use-package
+    ;;Editor configuration
     multiple-cursors
+    cl-lib
     powerline
     pdf-tools
     yasnippet
@@ -45,13 +51,17 @@
 
 (defvar packages-refreshed? nil)
 
-      (dolist (pack mf/install-packages)
-        (unless (package-installed-p pack)
-          (unless packages-refreshed?
-            (package-refresh-contents)
-            (setq packages-refreshed? t))
-          (package-install pack)))
-
+(dolist (pack mf/install-packages)
+  (unless (package-installed-p pack)
+    (unless packages-refreshed?
+      (package-refresh-contents)
+      (setq packages-refreshed? t))
+    (unwind-protect
+        (condition-case ex
+            (package-install pack)
+          ('error (message "Failed to install package [%s], caught exception: [%s]"
+                           pack ex)))
+      (message "Installed %s" pack))))
 ;; Load use-package, used for loading packages everywhere else
 (require 'use-package)
 ;; Set to t to debug package loading
@@ -117,10 +127,12 @@
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
   :ensure t
-  :defer t
+  :ensure cl-lib
   :bind (("C-c m n" . mc/mark-next-like-this)
 	 ("C-c m a" . mc/mark-all-like-this)
 	 ("C-c m l" . mc/edit-lines))
+  :config (progn
+	    (provide 'init-multiple-cursors))
   )
 #+END_SRC
 ** Powerline
