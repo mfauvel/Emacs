@@ -210,6 +210,7 @@
 	    (use-package org-install)
 	    (use-package ox)
             (use-package ox-beamer)
+            
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files
@@ -311,6 +312,14 @@
 		    ;;  "* %U %?\n" :clock-in t)
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
 		     "* %U %?\n")))
+	    
+
+	    ;; System locale to use for formatting time values.
+	    (setq system-time-locale "C")  ; Make sure that the weekdays in the
+					; time stamps of your Org mode files and
+					; in the agenda appear in English.
+
+
 	    )
   )
 #+END_SRC
