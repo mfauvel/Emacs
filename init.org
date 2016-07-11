@@ -33,11 +33,15 @@
     powerline
     pdf-tools
     yasnippet
+    helm
     ;; Org mode
     org
     org-plus-contrib
     org-ref
     ;; Auctex
+    auctex
+    auto-complete-auctex
+    bibtex
     ;; Programming
     elpy
     projectile
@@ -46,6 +50,7 @@
     ;; Misc
     emms
     wttrin
+    gnuplot
     )
   )
 
@@ -139,7 +144,6 @@
 #+BEGIN_SRC emacs-lisp
 (use-package powerline
   :ensure t
-  :defer t
   :config (powerline-default-theme)
   )
 #+END_SRC
@@ -173,9 +177,48 @@
 #+END_SRC
 ** Dired
 #+BEGIN_SRC emacs-lisp
-(setq dired-dwim-target t)
-(setq dired-listing-switches "-alh")
+(use-package dired
+  :init (progn
+  	  (setq dired-dwim-target t)
+	  (setq dired-listing-switches "-alh")
+          (put 'dired-find-alternate-file 'disabled nil)
+	  (setq ls-lisp-dirs-first t)
+  )
+  :config (progn
+	  (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
+	  (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file ".."))))  ; was dired-up-directory
+          
+  )
 #+END_SRC
+** Helm
+#+BEGIN_SRC emacs-lisp
+(use-package helm
+  :diminish helm-mode
+  :init
+  (progn
+    (require 'helm-config)
+    (helm-mode 1)
+    (setq helm-candidate-number-limit 100)
+    (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
+          helm-input-idle-delay 0.01  ; this actually updates things
+                                        ; reeeelatively quickly.                           
+          helm-yas-display-key-on-candidate t
+          helm-quick-update t
+          helm-M-x-requires-pattern nil
+          helm-ff-skip-boring-files t)
+    (helm-mode))
+  :bind (("C-c h" . helm-mini)
+         ("C-h a" . helm-apropos)
+         ("C-x C-b" . helm-buffers-list)
+         ("C-x b" . helm-buffers-list)
+         ("M-y" . helm-show-kill-ring)
+         ("M-x" . helm-M-x)
+         ("C-x C-f" . helm-find-files)
+         ("<tab>" . helm-execute-persistent-action)
+         ("C-z" . helm-select-action)
+         ("C-x c o" . helm-occur)))
+#+END_SRC
+
 ** Pdf-tools
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
@@ -187,13 +230,11 @@
 	    (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
 	    )
   )
-
 #+END_SRC
 ** Yasnippet
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
 :config (yas-global-mode 1)
-:defer t
 )
 #+END_SRC
 * Org mode
@@ -339,9 +380,36 @@
 	   )
   )
 #+END_SRC
-* AucTex
+* Latex
+** Auctex
 #+BEGIN_SRC emacs-lisp
-
+(use-package auctex
+  :ensure t
+  :mode ("\\.tex\\'" . latex-mode)
+  :commands (latex-mode LaTeX-mode plain-tex-mode)
+  :init
+  (progn
+    (add-hook 'LaTeX-mode-hook #'LaTeX-preview-setup)
+    (add-hook 'LaTeX-mode-hook #'visual-line-mode)
+    (add-hook 'LaTeX-mode-hook #'flyspell-mode)
+    (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)
+    (add-hook 'LaTeX-mode-hook #'outline-minor-mode)
+    (setq TeX-auto-save t
+	  TeX-parse-self t
+	  TeX-save-query nil
+	  TeX-PDF-mode t          
+	  LaTeX-command-style '(("" "%(PDF)%(latex) -shell-escape %S%(PDFout)")))
+    (setq-default TeX-master nil))
+    (setq outline-minor-mode-prefix "C-c C-o"))
+#+END_SRC
+** Bibtex
+#+BEGIN_SRC emacs-lisp
+(use-package bibtex
+  :mode ("\\.bib" . bibtex-mode)
+  :init
+  (progn
+    (setq bibtex-align-at-equal-sign t)
+    (add-hook 'bibtex-mode-hook (lambda () (set-fill-column 120)))))
 
 #+END_SRC
 * MU4E
@@ -472,9 +540,12 @@ Phone: +33(0)5 34 32 39 22
 #+BEGIN_SRC emacs-lisp
 (use-package auto-complete
   :ensure t
-  :defer t
-  :config
-  (ac-config-default)
+  :config (progn
+	    (ac-config-default)
+	    (setq ac-auto-start nil)            ; if t starts ac at startup automatically
+	    (setq ac-auto-show-menu t)
+	    (global-auto-complete-mode t)
+            (use-package auto-complete-auctex))  
   :init
   (setq ac-show-menu-immediately-on-auto-complete t))
 #+END_SRC
