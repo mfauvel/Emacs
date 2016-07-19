@@ -38,6 +38,9 @@
     org
     org-plus-contrib
     org-ref
+    calfw
+    calfw-org
+    org-gcal
     ;; Auctex
     auctex
     auto-complete-auctex
@@ -127,6 +130,9 @@
 (setq kill-emacs-query-functions
       (cons (lambda () (yes-or-no-p "Really Quit Emacs? "))
 	    kill-emacs-query-functions))
+
+;; Overwrite selected text
+(delete-selection-mode t)
 #+END_SRC
 ** Multiple cursors
 #+BEGIN_SRC emacs-lisp
@@ -191,6 +197,9 @@
   )
 #+END_SRC
 ** Helm
+:PROPERTIES:
+:ID:       0a9e9de9-0948-4db8-a6ea-bebc719734ff
+:END:
 #+BEGIN_SRC emacs-lisp
   (use-package helm
     :diminish helm-mode
@@ -220,6 +229,7 @@
            ("M-y" . helm-show-kill-ring)
            ("M-x" . helm-M-x)
            ("C-x C-f" . helm-find-files)
+           ("C-x C-a C-f" . helm-for-files)
            ("C-x c o" . helm-occur)))
 #+END_SRC
 
@@ -258,9 +268,11 @@
             
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
-	    (setq org-agenda-files
-		  (quote
-		   ("~/Documents/Org_Files/todo.org")))
+	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
+					 "~/Documents/Org_Files/housseCalendar.org"
+					 "/home/mfauvel/Documents/noemiesangelyCalendar.org"
+					 ))
+
 	    (setq org-export-htmlize-output-type 'css)
 	    (setq org-src-fontify-natively t)
 	    (setq org-src-preserve-indentation t)
@@ -384,6 +396,31 @@
 	   )
   )
 #+END_SRC
+** Calendar
+#+BEGIN_SRC emacs-lisp
+(use-package calfw
+  :ensure t
+  :bind (("C-c b" . cfw:open-calendar-buffer)
+	 ("C-c o" . cfw:open-org-calendar))
+  :config (use-package calfw-org)
+  )
+(use-package org-gcal
+  :ensure t
+  :config (progn
+	    (setq org-gcal-client-id "680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com"
+		  org-gcal-client-secret "eqo-Bh1VFGPy-yz2PdOLgVyI"
+		  org-gcal-file-alist '(("mathieu.fauvel@gmail.com" .  "/home/mfauvel/Documents/Org_Files/calendar.org")
+					("nbn6helusftroa60k61mfqotb8@group.calendar.google.com" . "/home/mfauvel/Documents/Org_Files/housseCalendar.org")
+					("noemie.sangely@gmail.com" . "/home/mfauvel/Documents/noemiesangelyCalendar.org"))
+		  calendar-week-start-day 1
+                  cfw:org-overwrite-default-keybinding t
+		  )
+	    )
+  )
+;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
+;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8 
+#+END_SRC
+
 * Latex
 ** Auctex
 #+BEGIN_SRC emacs-lisp
@@ -528,7 +565,6 @@ Phone: +33(0)5 34 32 39 22
 #+BEGIN_SRC emacs-lisp
 (use-package elpy
   :ensure t
-  :defer t
   :config (elpy-enable)
   )
 #+END_SRC
@@ -536,7 +572,6 @@ Phone: +33(0)5 34 32 39 22
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :ensure t
-  :defer t
   :config
   (projectile-global-mode))
 #+END_SRC
