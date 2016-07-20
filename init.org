@@ -39,7 +39,6 @@
     org-plus-contrib
     org-ref
     calfw
-    calfw-org
     org-gcal
     ;; Auctex
     auctex
@@ -365,8 +364,10 @@
 	    (setq org-capture-templates
 		  '(("t" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
 		     "* %U %?\n")
-		    ;; ("a" "ANR" entry (file+datetree "/home/mfauvel/Dropbox/ANR_JCJC/Proposition/work.org")
-		    ;;  "* %U %?\n" :clock-in t)
+		    ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
+		     "* %?\n")
+		    ("w" "Daily" entry (file+datetree "/home/mfauvel/Dropbox/ANR_JCJC/Proposition/dailywork.org")
+		     "* %?\n" :clock-in t)
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
 		     "* %U %?\n")))
 	    
@@ -402,7 +403,8 @@
   :ensure t
   :bind (("C-c b" . cfw:open-calendar-buffer)
 	 ("C-c o" . cfw:open-org-calendar))
-  :config (use-package calfw-org)
+  :config (progn (use-package calfw-org)
+		 )
   )
 (use-package org-gcal
   :ensure t
@@ -414,6 +416,8 @@
 					("noemie.sangely@gmail.com" . "/home/mfauvel/Documents/noemiesangelyCalendar.org"))
 		  calendar-week-start-day 1
                   cfw:org-overwrite-default-keybinding t
+	          org-gcal-down-days 360
+	    	  org-gcal-up-days 30
 		  )
 	    )
   )
@@ -638,4 +642,3 @@ Yes, we can have the weather with EMACS !
 - [ ] Rajouter =progn= pour tout les =:config=
 - [ ] Regarder le tutorial =helm= [[https://tuhdo.github.io/helm-intro.html]]
 - [ ] Rajouter les emphasis sur plusieurs lignes.
-
