@@ -1,6 +1,8 @@
 #+TITLE: Mathieu Fauvel Emacs Configuration
 #+OPTIONS: toc:4 h:4 creator:t
 #+PROPERTY: tangle init.el
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
 
 * Initialization
 ** Initialize init file
@@ -33,26 +35,34 @@
     powerline
     pdf-tools
     yasnippet
+    helm-bibtex
     helm
+    ivy
+    swiper
+    counsel
+    move-text
     ;; Org mode
     org
     org-plus-contrib
     org-ref
     calfw
     org-gcal
+    htmlize
     ;; Auctex
     auctex
     auto-complete-auctex
     bibtex
     ;; Programming
     elpy
-    projectile
+    find-file-in-project
     auto-complete
     magit
     ;; Misc
     emms
     wttrin
     gnuplot
+    ;; Shell
+    exec-path-from-shell
     )
   )
 
@@ -132,11 +142,47 @@
 
 ;; Overwrite selected text
 (delete-selection-mode t)
+
+;; kill-this-buffer
+(global-set-key (kbd "C-x k") 'kill-this-buffer)
+
+;; Split buffer vertically
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
+
+;; comment un-comment region
+(global-set-key (kbd "C-x c") 'comment-or-uncomment-region)
+
+;; Switch between theme
+(setq cur-theme nil)
+(defun cycle-theme ()
+  "Cycle between dark theme and light theme"
+  (interactive)
+  (if cur-theme
+      (progn
+	(disable-theme 'tsdh-dark)
+	(setq cur-theme nil)
+	)
+    (progn
+      (load-theme 'tsdh-dark t)
+      (setq cur-theme t)
+      )
+    )
+  )
+;; Bind this to C-x t
+(global-set-key (kbd "C-x t") 'cycle-theme)
+
+;; Move-text
+(use-package move-text
+:ensure t
+  :config (move-text-default-bindings)
+  )
 #+END_SRC
 ** Multiple cursors
 #+BEGIN_SRC emacs-lisp
 (use-package multiple-cursors
   :ensure t
+  :defer t
   :ensure cl-lib
   :bind (("C-c m n" . mc/mark-next-like-this)
 	 ("C-c m a" . mc/mark-all-like-this)
@@ -195,43 +241,43 @@
           
   )
 #+END_SRC
-** Helm
-:PROPERTIES:
-:ID:       0a9e9de9-0948-4db8-a6ea-bebc719734ff
-:END:
+** Ivy & swiper & counsel
 #+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :diminish helm-mode
-    :init
-    (progn
-      (require 'helm-config)
-      (helm-mode 1)
-      (setq helm-candidate-number-limit 100)
-      (setq helm-idle-delay 0.0 ; update fast sources immediately (doesn't).
-            helm-input-idle-delay 0.01
-            helm-yas-display-key-on-candidate t
-            helm-quick-update t
-            helm-M-x-requires-pattern nil
-            helm-ff-skip-boring-files t
-	    helm-buffers-fuzzy-matching t
-	    helm-recentf-fuzzy-match t
-	    helm-ff-file-name-history-use-recentf t)
-      (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
-      (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-      (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
-      )
-    :bind (       
-           ("C-c h" . helm-mini)
-           ("C-h a" . helm-apropos)
-           ("C-x C-b" . helm-buffers-list)
-           ("C-x b" . helm-buffers-list)
-           ("M-y" . helm-show-kill-ring)
-           ("M-x" . helm-M-x)
-           ("C-x C-f" . helm-find-files)
-           ("C-x C-a C-f" . helm-for-files)
-           ("C-x c o" . helm-occur)))
+(use-package counsel
+  :ensure t
+    :bind (
+	 ("C-x C-f" . counsel-find-file)
+	 ("C-x l" . counsel-locate)
+	 ("M-x" . counsel-M-x)
+	 ("M-y" . counsel-yank-pop)
+         ("C-x r". counsel-recentf)
+	 )  
+  )
+(use-package swiper
+  :init   (ivy-mode 1)
+  :ensure t
+  :config
+  (setq ivy-count-format "(%d/%d) ")
+  (setq ivy-use-virtual-buffers t)
+  ;; number of result lines to display
+  (setq ivy-height 10)
+  ;; does not count candidates
+  (setq ivy-count-format "")
+  ;; no regexp by default
+  (setq ivy-initial-inputs-alist nil)
+  ;; configure regexp engine.
+  (setq ivy-re-builders-alist
+	;; allow input not in order
+        '((t   . ivy--regex-ignore-order)))
+  (setq ivy-display-style 'fancy)
+  :bind (
+  ("C-s". swiper)
+  ("C-r". swiper)
+	 ("C-x b" . ivy-switch-buffer)
+         ("C-x C-b" . ivy-switch-buffer)
+	 )
+  )
 #+END_SRC
-
 ** Pdf-tools
 #+BEGIN_SRC emacs-lisp
 (use-package pdf-tools
@@ -248,8 +294,26 @@
 #+BEGIN_SRC emacs-lisp
 (use-package yasnippet
 :config (yas-global-mode 1)
+:defer t
 )
 #+END_SRC
+** exec-path-from-shell                                           
+#+BEGIN_SRC emacs-lisp
+(use-package exec-path-from-shell
+  :config (progn
+	    (setq exec-path-from-shell-check-startup-files nil)
+	    (exec-path-from-shell-initialize)
+	    (exec-path-from-shell-copy-env "PATH")
+	    )
+  )
+#+END_SRC
+** htmlize
+#+BEGIN_SRC emacs-lisp
+(use-package htmlize
+:ensure t
+)
+#+END_SRC
+
 * Org mode
 ** Basic configuration
 #+BEGIN_SRC emacs-lisp
@@ -264,18 +328,19 @@
 	    (use-package org-install)
 	    (use-package ox)
             (use-package ox-beamer)
+            (use-package ox-odt)
             
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
 					 "~/Documents/Org_Files/housseCalendar.org"
-					 "/home/mfauvel/Documents/noemiesangelyCalendar.org"
 					 ))
-
+                                         
 	    (setq org-export-htmlize-output-type 'css)
 	    (setq org-src-fontify-natively t)
 	    (setq org-src-preserve-indentation t)
             (setq org-confirm-babel-evaluate nil)
+            (setq org-export-babel-evaluate nil)	    
 	    (org-babel-do-load-languages
 	     'org-babel-load-languages
 	     '((python . t)
@@ -288,7 +353,7 @@
 	       (lisp .t)))
 	    (setq org-latex-listings 'minted)
 	    (setq org-latex-minted-options
-		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")))
+		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")("breaklines" "")))
 	    (setq org-latex-pdf-process 
 		  (quote (
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
@@ -302,7 +367,7 @@
 			   "\\documentclass{scrartcl}
                 \\usepackage{ucs} 
                 \\usepackage{array}
-                \\usepackage[utf8x]{inputenc}                   
+                \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
                 \\usepackage{lmodern}
                 \\usepackage[normalem]{ulem}
@@ -328,7 +393,7 @@
 			   "\\documentclass{IEEEtran}
                 \\usepackage{ucs} 
                 \\usepackage{array}
-                \\usepackage[utf8x]{inputenc}                   
+                \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
                 \\usepackage{lmodern}
                 \\usepackage[normalem]{ulem}
@@ -348,9 +413,11 @@
 			   ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 	    ;; Remove hypersetup that sucks whith beamer
 	    (setq org-latex-with-hyperref nil)
-	    ;; Remove hypersetup that sucks whith beamer
-	    (setq org-latex-with-hyperref nil)
-	   
+
+            ;; Multiple lines for emphasis
+	    (setcar (nthcdr 4 org-emphasis-regexp-components) 3)
+            (setcar (nthcdr 2 org-emphasis-regexp-components) " \t\n,")
+            (custom-set-variables `(org-emphasis-alist ',org-emphasis-alist))
 	    ;; Hide Marker
 	    (setq org-hide-emphasis-markers t)
             
@@ -364,10 +431,10 @@
 	    (setq org-capture-templates
 		  '(("t" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
 		     "* %U %?\n")
-		    ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
-		     "* %?\n")
-		    ("w" "Daily" entry (file+datetree "/home/mfauvel/Dropbox/ANR_JCJC/Proposition/dailywork.org")
-		     "* %?\n" :clock-in t)
+		     ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
+ 		     "* %?\n")
+		    ("w" "Daily" entry (file+datetree "~/Documents/Org_Files/dailywork.org")
+		     "* %?\n:PROPERTIES:\n:PROJECT: \n:END:" :clock-in t :clock-keep t)
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
 		     "* %U %?\n")))
 	    
@@ -377,10 +444,30 @@
 					; time stamps of your Org mode files and
 					; in the agenda appear in English.
 
+	    ;; prevent edit unseen text
+	    (setq-default org-catch-invisible-edits 'show)
 
+	    ;; Display image inline
+	    (setq org-startup-with-inline-images t)
+	    (setq org-image-actual-width 300)
+
+	    ;; Export date correctly from: http://endlessparentheses.com/better-time-stamps-in-org-export.html
+	    (add-to-list 'org-export-filter-timestamp-functions
+			 #'endless/filter-timestamp)
+	    (defun endless/filter-timestamp (trans back _comm)
+	      "Remove <> around time-stamps."
+	      (pcase back
+		((or `jekyll `html)
+		 (replace-regexp-in-string "&[lg]t;" "" trans))
+		(`latex
+		 (replace-regexp-in-string "[<>]" "" trans))))
+	    (setq-default org-display-custom-times t)
+	    (setq org-time-stamp-custom-formats
+		  '("<%A, %B %d, %Y>" . "<%A, %B %d, %Y %H:%M>"))
 	    )
   )
 #+END_SRC
+
 ** Org-ref
 #+BEGIN_SRC emacs-lisp
 (use-package org-ref
@@ -398,13 +485,16 @@
   )
 #+END_SRC
 ** Calendar
-#+BEGIN_SRC emacs-lisp
+I use  =calfw= and =org-gcal= to  synchronize my calendar.
+#+BEGIN_SRC emacs-lisp 
 (use-package calfw
   :ensure t
   :bind (("C-c b" . cfw:open-calendar-buffer)
 	 ("C-c o" . cfw:open-org-calendar))
-  :config (progn (use-package calfw-org)
-		 )
+  :config (progn
+	    (use-package calfw-org)
+            (setq cfw:org-capture-template nil)
+	    )
   )
 (use-package org-gcal
   :ensure t
@@ -412,8 +502,7 @@
 	    (setq org-gcal-client-id "680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com"
 		  org-gcal-client-secret "eqo-Bh1VFGPy-yz2PdOLgVyI"
 		  org-gcal-file-alist '(("mathieu.fauvel@gmail.com" .  "/home/mfauvel/Documents/Org_Files/calendar.org")
-					("nbn6helusftroa60k61mfqotb8@group.calendar.google.com" . "/home/mfauvel/Documents/Org_Files/housseCalendar.org")
-					("noemie.sangely@gmail.com" . "/home/mfauvel/Documents/noemiesangelyCalendar.org"))
+					("nbn6helusftroa60k61mfqotb8@group.calendar.google.com" . "/home/mfauvel/Documents/Org_Files/housseCalendar.org"))
 		  calendar-week-start-day 1
                   cfw:org-overwrite-default-keybinding t
 	          org-gcal-down-days 360
@@ -571,13 +660,7 @@ Phone: +33(0)5 34 32 39 22
   :ensure t
   :config (elpy-enable)
   )
-#+END_SRC
-** Projectile
-#+BEGIN_SRC emacs-lisp
-(use-package projectile
-  :ensure t
-  :config
-  (projectile-global-mode))
+(setenv "PYTHONPATH" (shell-command-to-string "$SHELL -i -c 'echo $PYTHONPATH'"))
 #+END_SRC
 ** Auto-complete
 #+BEGIN_SRC emacs-lisp
@@ -597,12 +680,15 @@ Phone: +33(0)5 34 32 39 22
 (use-package magit
   :ensure t
   :defer t
+  :bind (("C-x g". magit-status)
+  )
 )
 #+END_SRC
 ** Hideshow
 #+BEGIN_SRC emacs-lisp
 (use-package hideshow
   :ensure t
+  :defer t
   :bind (("C-c <left>" . hs-toggle-hiding)
 	 ("C-c <right>" . hs-show-block)
 	 )
@@ -630,15 +716,19 @@ Yes, we can have the weather with EMACS !
   :ensure t
   :defer t
   :commands (wttrin)
+  :bind (("C-x w". wttrin))
   :init
   (setq wttrin-default-cities '("Toulouse"
                                 "Vicdessos")))
 #+END_SRC
 
-* TO DO [50%]
+* TO DO [85%]
 - [X] regarder les mode latex et LaTex pour flyspell
 - [X] set up gnus-dired
 - [X] Configurer latex et outline mode
-- [ ] Rajouter =progn= pour tout les =:config=
-- [ ] Regarder le tutorial =helm= [[https://tuhdo.github.io/helm-intro.html]]
-- [ ] Rajouter les emphasis sur plusieurs lignes.
+- [X] Rajouter =progn= pour tout les =:config=
+- [X] Regarder le tutorial =helm= [[https://tuhdo.github.io/helm-intro.html]]
+- [ ] Rajouter les emphasis sur plusieurs lignes dans =org=
+- [X] Pour la capture
+  - modifier le fichier d'écriture ?
+  - rajouter les properties par défaut (projet ?)
