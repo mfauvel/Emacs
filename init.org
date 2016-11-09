@@ -57,6 +57,7 @@
     find-file-in-project
     auto-complete
     magit
+    focus
     ;; Misc
     emms
     wttrin
@@ -94,7 +95,8 @@
 (electric-pair-mode 1)
 
 ;; Set font
-(set-face-attribute 'default nil :font "DejaVu Sans Mono-10")
+;;(set-face-attribute 'default nil :font "DejaVu Sans Mono-10")
+(set-face-attribute 'default nil :font "Source Code Pro-10")
 
 ;; Prevent the cursor from blinking
 (blink-cursor-mode 0)
@@ -162,6 +164,7 @@
       (progn
 	(disable-theme 'tsdh-dark)
 	(setq cur-theme nil)
+        (set-frame-font "Source Code Pro-10" nil t)
 	)
     (progn
       (load-theme 'tsdh-dark t)
@@ -271,11 +274,12 @@
         '((t   . ivy--regex-ignore-order)))
   (setq ivy-display-style 'fancy)
   :bind (
-  ("C-s". swiper)
-  ("C-r". swiper)
+	 ("C-s". swiper)
+	 ("C-r". swiper)
 	 ("C-x b" . ivy-switch-buffer)
-         ("C-x C-b" . ivy-switch-buffer)
-	 )
+	 ("C-x C-b" . ivy-switch-buffer)
+	 ("C-c j" . ivy-immediate-done)
+  )
   )
 #+END_SRC
 ** Pdf-tools
@@ -329,6 +333,8 @@
 	    (use-package ox)
             (use-package ox-beamer)
             (use-package ox-odt)
+	    (use-package ox-bibtex)
+	    (use-package ox-extra)
             
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
@@ -345,9 +351,10 @@
 	     'org-babel-load-languages
 	     '((python . t)
 	       (latex . t)
-	       (sh . t)
+	       (shell . t)
 	       (calc . t)
 	       (ditaa .t)
+               (C .t)
 	       (octave .t)
                (org .t)
 	       (lisp .t)))
@@ -452,18 +459,12 @@
 	    (setq org-image-actual-width 300)
 
 	    ;; Export date correctly from: http://endlessparentheses.com/better-time-stamps-in-org-export.html
-	    (add-to-list 'org-export-filter-timestamp-functions
-			 #'endless/filter-timestamp)
-	    (defun endless/filter-timestamp (trans back _comm)
-	      "Remove <> around time-stamps."
-	      (pcase back
-		((or `jekyll `html)
-		 (replace-regexp-in-string "&[lg]t;" "" trans))
-		(`latex
-		 (replace-regexp-in-string "[<>]" "" trans))))
-	    (setq-default org-display-custom-times t)
+            (setq-default org-display-custom-times nil)
 	    (setq org-time-stamp-custom-formats
-		  '("<%A, %B %d, %Y>" . "<%A, %B %d, %Y %H:%M>"))
+	    	  '("<%A, %B %d, %Y>" . "<%A, %B %d, %Y %H:%M>"))
+
+	    ;; ignore headlines  but include the text with the tab :ignore: usefull for the bibtex
+	    (ox-extras-activate '(ignore-headlines))
 	    )
   )
 #+END_SRC
@@ -693,6 +694,15 @@ Phone: +33(0)5 34 32 39 22
 	 ("C-c <right>" . hs-show-block)
 	 )
   :init (add-hook 'prog-mode-hook #'hs-minor-mode)
+  )
+
+#+END_SRC
+** Focus
+#+BEGIN_SRC emacs-lisp
+(use-package focus
+  :ensure t
+  :defer t
+  :bind (("C-c f" . focus-mode))
   )
 
 #+END_SRC
