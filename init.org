@@ -180,6 +180,12 @@
 :ensure t
   :config (move-text-default-bindings)
   )
+
+;; Resize window
+(global-set-key (kbd "C-c <down>") 'enlarge-window)
+(global-set-key (kbd "C-c <up>") 'shrink-window)
+(global-set-key (kbd "C-c <left>") 'enlarge-window-horizontally)
+(global-set-key (kbd "C-c <right>") 'shrink-window-horizontally)
 #+END_SRC
 ** Multiple cursors
 #+BEGIN_SRC emacs-lisp
@@ -317,7 +323,6 @@
 :ensure t
 )
 #+END_SRC
-
 * Org mode
 ** Basic configuration
 #+BEGIN_SRC emacs-lisp
