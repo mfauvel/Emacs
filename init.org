@@ -1,12 +1,12 @@
 #+TITLE: Mathieu Fauvel Emacs Configuration
 #+OPTIONS: toc:4 h:4 creator:t
-#+PROPERTY: tangle init.el
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
+#+PROPERTY: header-args :tangle init.el
 
 * Initialization
 ** Initialize init file
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp 
 ;; Keep track of loading time
 (defconst emacs-start-time (current-time))
 (require 'package)
@@ -345,6 +345,7 @@
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
 					 "~/Documents/Org_Files/housseCalendar.org"
+                                     "~/Documents/Org_Files/todo.org"    
 					 ))
                                          
 	    (setq org-export-htmlize-output-type 'css)
@@ -369,7 +370,7 @@
 	    (setq org-latex-pdf-process 
 		  (quote (
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-			  "bibtex $(basename %b)" 
+			  "biber $(basename %b)" 
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f")))
 	   
@@ -377,7 +378,6 @@
 	    (add-to-list 'org-latex-classes
 			 '("koma-article"
 			   "\\documentclass{scrartcl}
-                \\usepackage{ucs} 
                 \\usepackage{array}
                 \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
@@ -390,7 +390,7 @@
                 \\usepackage[osf,sc]{mathpazo}
                 \\usepackage{booktabs}
                 \\usepackage{graphicx}
-
+                \\usepackage{csquotes}
                 \\usepackage[usenames,dvipsnames]{xcolor}\\definecolor{bg}{rgb}{0.95,0.95,0.95}
                 [NO-DEFAULT-PACKAGES]
                 [EXTRA]"
@@ -403,7 +403,6 @@
 	    (add-to-list 'org-latex-classes
 			 '("ieeetran"
 			   "\\documentclass{IEEEtran}
-                \\usepackage{ucs} 
                 \\usepackage{array}
                 \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
@@ -415,6 +414,7 @@
                 \\usepackage{hyperref}\\hypersetup{colorlinks=true,hypertexnames=false}
                 \\usepackage{booktabs}
                 \\usepackage{graphicx}
+                \\usepackage{csquotes}
 
                 \\usepackage[usenames,dvipsnames]{xcolor}\\definecolor{bg}{rgb}{0.95,0.95,0.95}
                 [NO-DEFAULT-PACKAGES]

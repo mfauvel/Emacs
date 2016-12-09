@@ -306,6 +306,7 @@
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
 					 "~/Documents/Org_Files/housseCalendar.org"
+                                     "~/Documents/Org_Files/todo.org"    
 					 ))
                                          
 	    (setq org-export-htmlize-output-type 'css)
@@ -330,7 +331,7 @@
 	    (setq org-latex-pdf-process 
 		  (quote (
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-			  "bibtex $(basename %b)" 
+			  "biber $(basename %b)" 
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f")))
 	   
@@ -338,7 +339,6 @@
 	    (add-to-list 'org-latex-classes
 			 '("koma-article"
 			   "\\documentclass{scrartcl}
-                \\usepackage{ucs} 
                 \\usepackage{array}
                 \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
@@ -351,7 +351,7 @@
                 \\usepackage[osf,sc]{mathpazo}
                 \\usepackage{booktabs}
                 \\usepackage{graphicx}
-
+                \\usepackage{csquotes}
                 \\usepackage[usenames,dvipsnames]{xcolor}\\definecolor{bg}{rgb}{0.95,0.95,0.95}
                 [NO-DEFAULT-PACKAGES]
                 [EXTRA]"
@@ -364,7 +364,6 @@
 	    (add-to-list 'org-latex-classes
 			 '("ieeetran"
 			   "\\documentclass{IEEEtran}
-                \\usepackage{ucs} 
                 \\usepackage{array}
                 \\usepackage[utf8]{inputenc}                   
                 \\usepackage[T1]{fontenc}
@@ -376,6 +375,7 @@
                 \\usepackage{hyperref}\\hypersetup{colorlinks=true,hypertexnames=false}
                 \\usepackage{booktabs}
                 \\usepackage{graphicx}
+                \\usepackage{csquotes}
 
                 \\usepackage[usenames,dvipsnames]{xcolor}\\definecolor{bg}{rgb}{0.95,0.95,0.95}
                 [NO-DEFAULT-PACKAGES]
@@ -472,7 +472,7 @@
 	    )
   )
 ;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
-;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8 
+;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8
 
 (use-package auctex
   :ensure t
