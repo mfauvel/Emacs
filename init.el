@@ -30,6 +30,7 @@
     counsel
     move-text
     windmove
+
     ;; Org mode
     org
     org-plus-contrib
@@ -270,6 +271,7 @@
   (setq ivy-display-style 'fancy)
   :bind (
 	 ("C-s". swiper)
+	 ("C-r". swiper)
 	 ("C-x b" . ivy-switch-buffer)
 	 ("C-x C-b" . ivy-switch-buffer)
 	 ("C-c j" . ivy-immediate-done)
@@ -303,14 +305,14 @@
 :ensure t
 )
 
-(use-package windmove
-  :ensure t
-  :config
-  ;; use command key on Mac
-  (windmove-default-keybindings 'super)
-  ;; wrap around at edges
-  (setq windmove-wrap-around t)
-  )
+;; (use-package windmove
+;;   :ensure t
+;;   :config
+;;   ;; use command key on Mac
+;;   (windmove-default-keybindings 'super)
+;;   ;; wrap around at edges
+;;   (setq windmove-wrap-around t)
+;;   )
 
 (use-package org
   :mode (("\\.org$" . org-mode))
@@ -635,7 +637,6 @@ Phone: +33(0)5 34 32 39 22
 	    (add-hook 'message-mode-hook 'turn-on-orgstruct++)   
 	    )
 
-  
   )
 
 (use-package elpy
