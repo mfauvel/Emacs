@@ -341,14 +341,14 @@
 #+END_SRC
 ** Windmove
 #+BEGIN_SRC emacs-lisp
-(use-package windmove
-  :ensure t
-  :config
-  ;; use command key on Mac
-  (windmove-default-keybindings 'super)
-  ;; wrap around at edges
-  (setq windmove-wrap-around t)
-  )
+;; (use-package windmove
+;;   :ensure t
+;;   :config
+;;   ;; use command key on Mac
+;;   (windmove-default-keybindings 'super)
+;;   ;; wrap around at edges
+;;   (setq windmove-wrap-around t)
+;;   )
 #+END_SRC
 * Org mode
 ** Basic configuration
