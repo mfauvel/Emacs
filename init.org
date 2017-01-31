@@ -7,21 +7,21 @@
 * Initialization
 ** Initialize init file
 #+BEGIN_SRC emacs-lisp 
-;; Keep track of loading time
-(defconst emacs-start-time (current-time))
-(require 'package)
-(package-initialize)
+  ;; Keep track of loading time
+  (defconst emacs-start-time (current-time))
+  (require 'package)
+  (package-initialize)
 
-(setq package-check-signature nil)
-(setq package-enable-at-startup nil)
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-			 ("melpa" . "http://melpa.org/packages/")
-			 ("org" . "http://orgmode.org/elpa/")))
+  (setq package-check-signature nil)
+  (setq package-enable-at-startup nil)
+  (setq package-archives '(("melpa" . "http://melpa.org/packages/")
+                           ("org" . "http://orgmode.org/elpa/")
+			   ("gnu" . "http://elpa.gnu.org/packages/")))
 
-(let ((elapsed (float-time (time-subtract (current-time) emacs-start-time))))
-  (message "Loaded packages in %.3fs" elapsed))
+  (let ((elapsed (float-time (time-subtract (current-time) emacs-start-time))))
+    (message "Loaded packages in %.3fs" elapsed))
 
-(require 'cl-lib)
+  (require 'cl-lib)
 
 #+END_SRC
 ** Install package with use-package
@@ -42,7 +42,7 @@
     counsel
     move-text
     windmove
-
+    neotree
     ;; Org mode
     org
     org-plus-contrib
@@ -352,6 +352,13 @@
 ;;   (setq windmove-wrap-around t)
 ;;   )
 #+END_SRC
+** Neotree
+#+BEGIN_SRC emacs-lisp
+(use-package neotree
+  :ensure t
+  :config   (global-set-key [f8] 'neotree-toggle)
+  )
+#+END_SRC
 * Org mode
 ** Basic configuration
 #+BEGIN_SRC emacs-lisp
@@ -373,7 +380,6 @@
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
-					 "~/Documents/Org_Files/housseCalendar.org"
                                      "~/Documents/Org_Files/todo.org"    
 					 ))
                                          
@@ -381,7 +387,7 @@
 	    (setq org-src-fontify-natively t)
 	    (setq org-src-preserve-indentation t)
             (setq org-confirm-babel-evaluate nil)
-            (setq org-export-babel-evaluate nil)	    
+   
 	    (org-babel-do-load-languages
 	     'org-babel-load-languages
 	     '((python . t)
@@ -395,7 +401,7 @@
 	       (lisp .t)))
 	    (setq org-latex-listings 'minted)
 	    (setq org-latex-minted-options
-		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")("breaklines" "")))
+		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")))
 	    (setq org-latex-pdf-process 
 		  (quote (
 			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
@@ -473,7 +479,7 @@
 		  '(("t" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
 		     "* %U %?\n")
 		     ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
- 		     "* %?\n")
+                     "* %?\n\n%^T\n\n:PROPERTIES:\n\n:END:\n\n")
 		    ("w" "Daily" entry (file+datetree "~/Documents/Org_Files/dailywork.org")
 		     "* %?\n:PROPERTIES:\n:PROJECT: \n:END:" :clock-in t :clock-keep t)
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
@@ -528,23 +534,24 @@ I use  =calfw= and =org-gcal= to  synchronize my calendar.
 	 ("C-c o" . cfw:open-org-calendar))
   :config (progn
 	    (use-package calfw-org)
-            (setq cfw:org-capture-template nil)
+            (setq cfw:org-capture-template nil
+		  calendar-week-start-day 1
+                  cfw:org-overwrite-default-keybinding t)
 	    )
   )
 (use-package org-gcal
   :ensure t
   :config (progn
 	    (setq org-gcal-client-id "680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com"
-		  org-gcal-client-secret "eqo-Bh1VFGPy-yz2PdOLgVyI"
-		  org-gcal-file-alist '(("mathieu.fauvel@gmail.com" .  "/home/mfauvel/Documents/Org_Files/calendar.org")
-					("nbn6helusftroa60k61mfqotb8@group.calendar.google.com" . "/home/mfauvel/Documents/Org_Files/housseCalendar.org"))
-		  calendar-week-start-day 1
-                  cfw:org-overwrite-default-keybinding t
+		  org-gcal-client-secret "QYyHhLMv8uprO0W9IPAg8Rge"
+		  org-gcal-file-alist '(("mathieu.fauvel@gmail.com" .  "/home/mfauvel/Documents/Org_Files/calendar.org"))
 	          org-gcal-down-days 360
 	    	  org-gcal-up-days 30
 		  )
 	    )
   )
+(add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
+(add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
 ;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
 ;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8 
 #+END_SRC
