@@ -20,7 +20,6 @@
     ;;Editor configuration
     multiple-cursors
     cl-lib
-    powerline
     pdf-tools
     yasnippet
     helm-bibtex
@@ -31,6 +30,8 @@
     move-text
     windmove
     neotree
+    telephone-line
+    monokai
     ;; Org mode
     org
     org-plus-contrib
@@ -146,6 +147,18 @@
 ;; comment un-comment region
 (global-set-key (kbd "C-x c") 'comment-or-uncomment-region)
 
+;; Theme
+(use-package monokai-theme
+  :ensure t
+  :defer t
+  :config
+   (setq monokai-height-minus-1 1.0
+        monokai-height-plus-1 1.0
+        monokai-height-plus-2 1.0
+        monokai-height-plus-3 1.0
+        monokai-height-plus-4 1.0)
+  )
+
 ;; Switch between theme
 (setq cur-theme nil)
 (defun cycle-theme ()
@@ -153,7 +166,7 @@
   (interactive)
   (if cur-theme
       (progn
-	(disable-theme 'tsdh-dark)
+	(disable-theme 'monokai)
 	(setq cur-theme nil)
 	(set-face-attribute 'default nil
 		    :family "Source Code Pro"
@@ -163,7 +176,7 @@
 		    )
 	)
     (progn
-      (load-theme 'tsdh-dark t)
+      (load-theme 'monokai t)
       (setq cur-theme t)
       (set-face-attribute 'default nil
 		    :family "Source Code Pro"
@@ -200,9 +213,25 @@
 	    (provide 'init-multiple-cursors))
   )
 
-(use-package powerline
-  :ensure t
-  :config (powerline-default-theme)
+;; (use-package powerline
+;;   :ensure t
+;;   :config (powerline-default-theme)
+;;   )
+
+(use-package telephone-line
+  :config
+  (setq telephone-line-lhs
+        '((evil   . (telephone-line-evil-tag-segment))
+          (accent . (telephone-line-vc-segment
+                     telephone-line-erc-modified-channels-segment
+                     telephone-line-process-segment))
+          (nil    . (telephone-line-minor-mode-segment
+                     telephone-line-buffer-segment))))
+  (setq telephone-line-rhs
+        '((nil    . (telephone-line-misc-info-segment))
+          (accent . (telephone-line-major-mode-segment))
+          (evil   . (telephone-line-airline-position-segment))))
+  (telephone-line-mode t)
   )
 
 (setq coding-system-for-read 'utf-8)
@@ -344,7 +373,9 @@
 	    (setq org-src-fontify-natively t)
 	    (setq org-src-preserve-indentation t)
             (setq org-confirm-babel-evaluate nil)
-   
+
+	    (setq org-odt-data-dir "/usr/share/emacs/24.4/etc/org/")
+            (setq org-odt-styles-file nil)
 	    (org-babel-do-load-languages
 	     'org-babel-load-languages
 	     '((python . t)
@@ -359,13 +390,14 @@
 	    (setq org-latex-listings 'minted)
 	    (setq org-latex-minted-options
 		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")))
-	    (setq org-latex-pdf-process 
-		  (quote (
-			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-			  "biber $(basename %b)" 
-			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-			  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f")))
-	   
+	    ;; (setq org-latex-pdf-process 
+	    ;; 	  (quote (
+	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
+	    ;; 		  "biber $(basename %b)" 
+	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
+	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f")))
+	    (setq org-latex-pdf-process
+		  '("latexmk -pdflatex='pdflatex -interaction nonstopmode -shell-escape' -pdf -bibtex -f %f"))
 	    ;;(setq org-export-latex-listings t)
 	    (add-to-list 'org-latex-classes
 			 '("koma-article"
@@ -415,6 +447,10 @@
 			   ("\\subsection{%s}" . "\\subsection*{%s}")
 			   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
 			   ("\\paragraph{%s}" . "\\paragraph*{%s}")))
+	    ;; Add onlyenv for beamer
+	    (add-to-list 'org-beamer-environments-extra
+               '("onlyenv" "O" "\\begin{onlyenv}%a" "\\end{onlyenv}"))
+	    
 	    ;; Remove hypersetup that sucks whith beamer
 	    (setq org-latex-with-hyperref nil)
 
@@ -467,7 +503,7 @@
 
 (use-package org-ref
   :ensure t
-  :defer t
+  :init (setq org-ref-completion-library 'org-ref-ivy-cite)
   :config ((setq reftex-default-bibliography '("/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/references.bib"))
 	   (setq org-ref-bibliography-notes "/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/notes.org"
 		 org-ref-default-bibliography '("/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/references.bib")
@@ -475,7 +511,7 @@
 	   (unless (file-exists-p org-ref-pdf-directory)
 	     (make-directory org-ref-pdf-directory t))
 	   
-	   (setq helm-bibtex-pdf-open-function 'org-open-file)
+	     (setq helm-bibtex-pdf-open-function 'org-open-file)
 	   )
   )
 
@@ -602,7 +638,7 @@ Phone: +33(0)5 34 32 39 22
 
 	    ;; Only to reflow my paragraphs
 	    (setq mu4e-compose-format-flowed t)
-	    
+
 	    (add-hook 'mu4e-view-mode-hook
 		      (lambda()
 			;; try to emulate some of the eww key-bindings
@@ -652,14 +688,11 @@ Phone: +33(0)5 34 32 39 22
 
 (use-package auto-complete
   :ensure t
-  :config (progn
-	    (ac-config-default)
-	    (setq ac-auto-start nil)            ; if t starts ac at startup automatically
-	    (setq ac-auto-show-menu t)
-	    (global-auto-complete-mode t)
-            (use-package auto-complete-auctex))  
-  :init
-  (setq ac-show-menu-immediately-on-auto-complete t))
+  :init (progn
+  (ac-config-default)
+  (global-auto-complete-mode t)
+  )
+  )
 
 (use-package magit
   :ensure t
