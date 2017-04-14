@@ -32,6 +32,7 @@
     neotree
     telephone-line
     monokai
+    dired-quick-sort
     ;; Org mode
     org
     org-plus-contrib
@@ -100,6 +101,11 @@
 ;; No sound !
 (setq visible-bell t)
 
+;; Init recentf
+(setq recentf-auto-cleanup 'never)
+(recentf-mode 1)
+(setq recentf-max-menu-items 100)
+
 ;; I need my entire screen
 (scroll-bar-mode 0)
 (tool-bar-mode 0)
@@ -151,7 +157,7 @@
 (use-package monokai-theme
   :ensure t
   :defer t
-  :config
+  :init
    (setq monokai-height-minus-1 1.0
         monokai-height-plus-1 1.0
         monokai-height-plus-2 1.0
@@ -213,16 +219,10 @@
 	    (provide 'init-multiple-cursors))
   )
 
-;; (use-package powerline
-;;   :ensure t
-;;   :config (powerline-default-theme)
-;;   )
-
 (use-package telephone-line
   :config
   (setq telephone-line-lhs
-        '((evil   . (telephone-line-evil-tag-segment))
-          (accent . (telephone-line-vc-segment
+        '((accent . (telephone-line-vc-segment
                      telephone-line-erc-modified-channels-segment
                      telephone-line-process-segment))
           (nil    . (telephone-line-minor-mode-segment
@@ -269,6 +269,11 @@
 	  (define-key dired-mode-map (kbd "RET") 'dired-find-alternate-file) ; was dired-advertised-find-file
 	  (define-key dired-mode-map (kbd "^") (lambda () (interactive) (find-alternate-file ".."))))  ; was dired-up-directory
           
+  )
+(use-package dired-quick-sort
+  :ensure t
+  :config
+  (dired-quick-sort-setup)
   )
 
 (use-package counsel
