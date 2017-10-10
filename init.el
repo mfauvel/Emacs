@@ -44,6 +44,7 @@
     auctex
     auto-complete-auctex
     bibtex
+    reftex
     ;; Programming
     elpy
     find-file-in-project
@@ -196,6 +197,9 @@
 ;; Bind this to C-x t
 (global-set-key (kbd "C-x t") 'cycle-theme)
 
+;; Linum-mode
+(global-set-key (kbd "C-x n") 'linum-mode)
+
 ;; Move-text
 (use-package move-text
   :ensure t
@@ -207,6 +211,38 @@
 (global-set-key (kbd "C-x }") 'enlarge-window-horizontally)
 (global-set-key (kbd "C-x <down>") 'shrink-window)
 (global-set-key (kbd "C-x <up>") 'enlarge-window)
+
+;; ibuffer
+(global-set-key (kbd "C-x C-b") 'ibuffer) ;; Use Ibuffer for Buffer List
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+	       ("dired" (mode . dired-mode))
+	       ("org" (name . "^.*org$"))
+
+	       ("web" (or (mode . web-mode) (mode . js2-mode)))
+	       ("shell" (or (mode . eshell-mode) (mode . shell-mode)))
+	       ("mu4e" (name . "\*mu4e\*"))
+	       ("Programming" (or
+			       (mode . python-mode)
+			       (mode . c++-mode)))
+	       ("Tex" (mode . latex-mode))
+               ("PDF" (name . "^.*pdf$"))
+	       ("emacs" (or
+			 (name . "^\\*scratch\\*$")
+			 (name . "^\\*Messages\\*$")))
+	       ))))
+(add-hook 'ibuffer-mode-hook
+	  (lambda ()
+	    (ibuffer-auto-mode 1)
+	    (ibuffer-switch-to-saved-filter-groups "default")))
+
+;; don't show these
+					;(add-to-list 'ibuffer-never-show-predicates "zowie")
+;; Don't show filter groups if there are no buffers in that group
+(setq ibuffer-show-empty-filter-groups nil)
+
+;; Don't ask for confirmation to delete marked buffers
+(setq ibuffer-expert t)
 
 (use-package multiple-cursors
   :ensure t
@@ -307,7 +343,6 @@
 	 ("C-s". swiper)
 	 ("C-r". swiper)
 	 ("C-x b" . ivy-switch-buffer)
-	 ("C-x C-b" . ivy-switch-buffer)
 	 ("C-c j" . ivy-immediate-done)
   )
   )
@@ -455,7 +490,15 @@
 	    ;; Add onlyenv for beamer
 	    (add-to-list 'org-beamer-environments-extra
                '("onlyenv" "O" "\\begin{onlyenv}%a" "\\end{onlyenv}"))
-	    
+	    (add-to-list 'org-beamer-environments-extra
+               '("visibleenv" "V" "\\begin{visibleenv}%a" "\\end{visibleenv}"))
+
+	    ;; Add boldface beamer
+	    (defun my-beamer-bold (contents backend info)
+	      (when (eq backend 'beamer)
+		(replace-regexp-in-string "\\`\\\\[A-Za-z0-9]+" "\\\\textbf" contents)))
+	        
+                (add-to-list 'org-export-filter-bold-functions 'my-beamer-bold)
 	    ;; Remove hypersetup that sucks whith beamer
 	    (setq org-latex-with-hyperref nil)
 
@@ -558,13 +601,14 @@
     (add-hook 'LaTeX-mode-hook #'flyspell-mode)
     (add-hook 'LaTeX-mode-hook #'LaTeX-math-mode)
     (add-hook 'LaTeX-mode-hook #'outline-minor-mode)
-    (setq TeX-auto-save t
-	  TeX-parse-self t
-	  TeX-save-query nil
-	  TeX-PDF-mode t          
-	  LaTeX-command-style '(("" "%(PDF)%(latex) -shell-escape %S%(PDFout)")))
-    (setq-default TeX-master nil))
+    (setq TeX-auto-save t)
+    (setq TeX-parse-self t)
+    (setq TeX-save-query nil)
+    (setq TeX-PDF-mode t)     
+    (setq LaTeX-command-style '(("" "%(PDF)%(latex) -shell-escape %S%(PDFout)")))
+    (setq-default TeX-master nil)
     (setq outline-minor-mode-prefix "C-c C-o"))
+  )
 
 (use-package bibtex
   :mode ("\\.bib" . bibtex-mode)
@@ -572,6 +616,11 @@
   (progn
     (setq bibtex-align-at-equal-sign t)
     (add-hook 'bibtex-mode-hook (lambda () (set-fill-column 120)))))
+
+(use-package reftex
+  :commands turn-on-reftex
+  :init (progn (setq reftex-plug-into-AUCTeX t))
+  )
 
 (use-package mu4e
   :load-path "/usr/local/share/emacs/site-lisp/mu4e"
@@ -680,14 +729,20 @@ Phone: +33(0)5 34 32 39 22
 
 	    ;; Add org table and org list structures to the message mode
 	    (add-hook 'message-mode-hook 'turn-on-orgtbl)
-	    (add-hook 'message-mode-hook 'turn-on-orgstruct++)   
-	    )
+	    (add-hook 'message-mode-hook 'turn-on-orgstruct++)
 
+	    ;; Multiple attachments
+	    (setq mu4e-save-multiple-attachments-without-asking t)
+	    
+	    )
   )
 
 (use-package elpy
   :ensure t
-  :config (elpy-enable)
+  :config (progn
+	    (elpy-enable)
+	    (elpy-use-ipython)
+	    )
   )
 (setenv "PYTHONPATH" (shell-command-to-string "$SHELL -i -c 'echo $PYTHONPATH'"))
 
