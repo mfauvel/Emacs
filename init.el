@@ -38,6 +38,7 @@
     org-plus-contrib
     org-ref
     calfw
+    calfw-org
     org-gcal
     htmlize
     ;; Auctex
@@ -354,6 +355,8 @@
   :config (progn 
 	    (setq revert-without-query (quote (".*.pdf")))
 	    (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
+	    (setq pdf-annot-activate-created-annotations t)
+	    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)()
 	    )
   )
 
@@ -429,16 +432,10 @@
 	       (lisp .t)))
 	    (setq org-latex-listings 'minted)
 	    (setq org-latex-minted-options
-		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")))
-	    ;; (setq org-latex-pdf-process 
-	    ;; 	  (quote (
-	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-	    ;; 		  "biber $(basename %b)" 
-	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f" 
-	    ;; 		  "pdflatex -interaction nonstopmode -shell-escape -output-directory %o %f")))
+		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")("breaklines" "true")))
 	    (setq org-latex-pdf-process
 		  '("latexmk -pdflatex='pdflatex -interaction nonstopmode -shell-escape' -pdf -bibtex -f %f"))
-	    ;;(setq org-export-latex-listings t)
+	    (setq org-highlight-latex-and-related '(latex))
 	    (add-to-list 'org-latex-classes
 			 '("koma-article"
 			   "\\documentclass{scrartcl}
@@ -489,9 +486,11 @@
 			   ("\\paragraph{%s}" . "\\paragraph*{%s}")))
 	    ;; Add onlyenv for beamer
 	    (add-to-list 'org-beamer-environments-extra
-               '("onlyenv" "O" "\\begin{onlyenv}%a" "\\end{onlyenv}"))
+			 '("onlyenv" "O" "\\begin{onlyenv}%a" "\\end{onlyenv}"))
 	    (add-to-list 'org-beamer-environments-extra
-               '("visibleenv" "V" "\\begin{visibleenv}%a" "\\end{visibleenv}"))
+			 '("visibleenv" "V" "\\begin{visibleenv}%a" "\\end{visibleenv}"))
+	    (add-to-list 'org-beamer-environments-extra
+			 '("uncoverenv" "U" "\\begin{uncoverenv}%a" "\\end{uncoverenv}"))
 
 	    ;; Add boldface beamer
 	    (defun my-beamer-bold (contents backend info)
@@ -537,7 +536,7 @@
 
 	    ;; Display image inline
 	    (setq org-startup-with-inline-images t)
-	    (setq org-image-actual-width 300)
+	    (setq org-image-actual-width 30)
 
 	    ;; Export date correctly from: http://endlessparentheses.com/better-time-stamps-in-org-export.html
             (setq-default org-display-custom-times nil)
@@ -567,8 +566,8 @@
   :ensure t
   :bind (("C-c b" . cfw:open-calendar-buffer)
 	 ("C-c o" . cfw:open-org-calendar))
-  :config (progn
-	    (use-package calfw-org)
+  :init (progn
+	    (require 'calfw-org)
             (setq cfw:org-capture-template nil
 		  calendar-week-start-day 1
                   cfw:org-overwrite-default-keybinding t)
@@ -741,7 +740,8 @@ Phone: +33(0)5 34 32 39 22
   :ensure t
   :config (progn
 	    (elpy-enable)
-	    (elpy-use-ipython)
+	    (setq python-shell-interpreter "jupyter"
+		  python-shell-interpreter-args "console --simple-prompt")
 	    )
   )
 (setenv "PYTHONPATH" (shell-command-to-string "$SHELL -i -c 'echo $PYTHONPATH'"))
@@ -793,3 +793,26 @@ Phone: +33(0)5 34 32 39 22
   :init
   (setq wttrin-default-cities '("Toulouse"
                                 "Vicdessos")))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-emphasis-alist
+   (quote
+    (("*" bold)
+     ("/" italic)
+     ("_" underline)
+     ("=" org-verbatim verbatim)
+     ("~" org-code verbatim)
+     ("+"
+      (:strike-through t)))))
+ '(package-selected-packages
+   (quote
+    (monokai wttrin volatile-highlights use-package telephone-line org-ref org-plus-contrib org-pdfview org-gcal neotree multiple-cursors move-text monokai-theme magit htmlize gnuplot focus exec-path-from-shell emms elpy dired-quick-sort diminish counsel calfw-org calfw auto-complete-auctex auctex))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
