@@ -41,7 +41,7 @@
     counsel
     move-text
     windmove
-    neotree
+    dashboard
     telephone-line
     monokai
     dired-quick-sort
@@ -53,6 +53,7 @@
     calfw-org
     org-gcal
     htmlize
+    epresent
     ;; Auctex
     auctex
     auto-complete-auctex
@@ -87,7 +88,8 @@
                            pack ex)))
       (message "Installed %s" pack))))
 ;; Load use-package, used for loading packages everywhere else
-(require 'use-package)
+(eval-when-compile
+  (require 'use-package))
 ;; Set to t to debug package loading
 (setq use-package-verbose nil)
 #+END_SRC
@@ -95,19 +97,13 @@
 * Editor configuration
 ** Basics configuration
 #+BEGIN_SRC emacs-lisp
-;; See brackets and so don
+;; See brackets
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 (electric-pair-mode 1)
 
 ;; Set font
-;;(set-face-attribute 'default nil :font "DejaVu Sans Mono-10")
-(set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
+(set-face-attribute 'default nil :font "-unknown-Inconsolata-normal-normal-normal-*-15-*-*-*-m-0-iso10646-1")
 
 ;; Prevent the cursor from blinking
 (blink-cursor-mode 0)
@@ -162,7 +158,12 @@
 (delete-selection-mode t)
 
 ;; kill-this-buffer
-(global-set-key (kbd "C-x k") 'kill-this-buffer)
+(defun mf/kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(global-set-key (kbd "C-x k") 'mf/kill-this-buffer)
 
 ;; Split buffer vertically
 (setq split-height-threshold nil)
@@ -176,7 +177,7 @@
   :ensure t
   :defer t
   :init
-   (setq monokai-height-minus-1 1.0
+  (setq monokai-height-minus-1 1.0
         monokai-height-plus-1 1.0
         monokai-height-plus-2 1.0
         monokai-height-plus-3 1.0
@@ -192,22 +193,10 @@
       (progn
 	(disable-theme 'monokai)
 	(setq cur-theme nil)
-	(set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
 	)
     (progn
       (load-theme 'monokai t)
       (setq cur-theme t)
-      (set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
       )
     )
   )
@@ -413,22 +402,10 @@
 :ensure t
 )
 #+END_SRC
-** Windmove
+** Dashboard
 #+BEGIN_SRC emacs-lisp
-;; (use-package windmove
-;;   :ensure t
-;;   :config
-;;   ;; use command key on Mac
-;;   (windmove-default-keybindings 'super)
-;;   ;; wrap around at edges
-;;   (setq windmove-wrap-around t)
-;;   )
-#+END_SRC
-** Neotree
-#+BEGIN_SRC emacs-lisp
-(use-package neotree
-  :ensure t
-  :config   (global-set-key [f8] 'neotree-toggle)
+(use-package dashboard
+  :config (dashboard-setup-startup-hook)
   )
 #+END_SRC
 * Org mode
@@ -447,6 +424,7 @@
             (use-package ox-beamer)
             (use-package ox-odt)
 	    (use-package ox-bibtex)
+	    (use-package ox-org)
 	    (use-package ox-extra)
             
 	    (setq org-log-done t)
@@ -578,8 +556,8 @@
 	    (setq-default org-catch-invisible-edits 'show)
 
 	    ;; Display image inline
-	    (setq org-startup-with-inline-images t)
-	    (setq org-image-actual-width 30)
+	    (setq org-display-inline-images nil)
+	    (setq org-image-actual-width nil)
 
 	    ;; Export date correctly from: http://endlessparentheses.com/better-time-stamps-in-org-export.html
             (setq-default org-display-custom-times nil)
@@ -638,12 +616,30 @@ I use  =calfw= and =org-gcal= to  synchronize my calendar.
 ;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
 ;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8 
 #+END_SRC
+** Org-mind-map
+#+BEGIN_SRC sh :tangle nil
+wget -P org-mind-map https://raw.githubusercontent.com/theodorewiles/org-mind-map/master/org-mind-map.el
+#+END_SRC
 
+#+RESULTS:
+
+#+BEGIN_SRC emacs-lisp
+(use-package org-mind-map
+  :load-path "/home/mfauvel/.emacs.d/org-mind-map/"
+  )
+#+END_SRC
+** epresent
+#+BEGIN_SRC emacs-lisp
+(use-package epresent
+  :ensure t
+  )
+
+#+END_SRC
 * Latex
 ** Auctex
 #+BEGIN_SRC emacs-lisp
-(use-package auctex
-  :ensure t
+(use-package tex
+  :ensure auctex
   :mode ("\\.tex\\'" . latex-mode)
   :commands (latex-mode LaTeX-mode plain-tex-mode)
   :init
@@ -726,6 +722,7 @@ I use  =calfw= and =org-gcal= to  synchronize my calendar.
 		   "Fauvel Mathieu
 Director of the Engineering and Numerical Sciences Department
 Associated Editor IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing
+Associated Editor MDPI Remote Sensing
 Coordinator of the European IEEE GRSS Chapters
 
 http://fauvel.mathieu.free.fr
@@ -806,11 +803,15 @@ Phone: +33(0)5 34 32 39 22
   :ensure t
   :config (progn
 	    (elpy-enable)
-	    (setq python-shell-interpreter "jupyter"
-		  python-shell-interpreter-args "console --simple-prompt")
+	    (setq python-shell-interpreter "ipython"
+		  python-shell-interpreter-args "-i --simple-prompt")
 	    )
   )
 (setenv "PYTHONPATH" (shell-command-to-string "$SHELL -i -c 'echo $PYTHONPATH'"))
+#+END_SRC
+** CPP
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 #+END_SRC
 ** Auto-complete
 #+BEGIN_SRC emacs-lisp
@@ -855,15 +856,34 @@ Phone: +33(0)5 34 32 39 22
 * Misc
 ** EMMS
 Listen musing whith EMACS !
+
 #+BEGIN_SRC emacs-lisp
+(use-package emms-setup
+  :config
+  (emms-all)
+  (emms-default-players)
+  )
+
 (use-package emms
   :ensure t
-  :defer t
   :config (progn 
 	    (emms-all)
-	    (emms-default-players)
+	    (emms-history-load)	    
+	    (setq emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find)
+	    (setq emms-source-file-default-directory "~/Musique/")
+	    (setq emms-player-list '(emms-player-vlc-playlist
+				     emms-player-vlc))
 	    )
-  )
+  :bind
+  (("C-c e p" . emms-previous)
+   ("C-c e n" . emms-next)
+   ("C-c e P" . emms-pause)
+   ("C-c e s" . emms-show)
+   ("C-c e k" . emms-stop)
+   ("C-c e +" . emms-volume-mode-plus)
+   ("C-c e -" . emms-volume-mode-minus)
+   ("C-c e S" . emms-play-playlist)))
+
 #+END_SRC
 ** Weather
 Yes, we can have the weather with EMACS !

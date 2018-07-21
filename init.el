@@ -29,7 +29,7 @@
     counsel
     move-text
     windmove
-    neotree
+    dashboard
     telephone-line
     monokai
     dired-quick-sort
@@ -41,6 +41,7 @@
     calfw-org
     org-gcal
     htmlize
+    epresent
     ;; Auctex
     auctex
     auto-complete-auctex
@@ -75,23 +76,18 @@
                            pack ex)))
       (message "Installed %s" pack))))
 ;; Load use-package, used for loading packages everywhere else
-(require 'use-package)
+(eval-when-compile
+  (require 'use-package))
 ;; Set to t to debug package loading
 (setq use-package-verbose nil)
 
-;; See brackets and so don
+;; See brackets
 (show-paren-mode 1)
 (setq show-paren-style 'mixed) ; highlight brackets if visible, else entire expression
 (electric-pair-mode 1)
 
 ;; Set font
-;;(set-face-attribute 'default nil :font "DejaVu Sans Mono-10")
-(set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
+(set-face-attribute 'default nil :font "-unknown-Inconsolata-normal-normal-normal-*-15-*-*-*-m-0-iso10646-1")
 
 ;; Prevent the cursor from blinking
 (blink-cursor-mode 0)
@@ -146,7 +142,12 @@
 (delete-selection-mode t)
 
 ;; kill-this-buffer
-(global-set-key (kbd "C-x k") 'kill-this-buffer)
+(defun mf/kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(global-set-key (kbd "C-x k") 'mf/kill-this-buffer)
 
 ;; Split buffer vertically
 (setq split-height-threshold nil)
@@ -160,7 +161,7 @@
   :ensure t
   :defer t
   :init
-   (setq monokai-height-minus-1 1.0
+  (setq monokai-height-minus-1 1.0
         monokai-height-plus-1 1.0
         monokai-height-plus-2 1.0
         monokai-height-plus-3 1.0
@@ -176,22 +177,10 @@
       (progn
 	(disable-theme 'monokai)
 	(setq cur-theme nil)
-	(set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
 	)
     (progn
       (load-theme 'monokai t)
       (setq cur-theme t)
-      (set-face-attribute 'default nil
-		    :family "Source Code Pro"
-		    :height 110
-		    :weight 'normal
-		    :width 'normal
-		    )
       )
     )
   )
@@ -377,18 +366,8 @@
 :ensure t
 )
 
-;; (use-package windmove
-;;   :ensure t
-;;   :config
-;;   ;; use command key on Mac
-;;   (windmove-default-keybindings 'super)
-;;   ;; wrap around at edges
-;;   (setq windmove-wrap-around t)
-;;   )
-
-(use-package neotree
-  :ensure t
-  :config   (global-set-key [f8] 'neotree-toggle)
+(use-package dashboard
+  :config (dashboard-setup-startup-hook)
   )
 
 (use-package org
@@ -404,6 +383,7 @@
             (use-package ox-beamer)
             (use-package ox-odt)
 	    (use-package ox-bibtex)
+	    (use-package ox-org)
 	    (use-package ox-extra)
             
 	    (setq org-log-done t)
@@ -535,8 +515,8 @@
 	    (setq-default org-catch-invisible-edits 'show)
 
 	    ;; Display image inline
-	    (setq org-startup-with-inline-images t)
-	    (setq org-image-actual-width 30)
+	    (setq org-display-inline-images nil)
+	    (setq org-image-actual-width nil)
 
 	    ;; Export date correctly from: http://endlessparentheses.com/better-time-stamps-in-org-export.html
             (setq-default org-display-custom-times nil)
@@ -589,8 +569,16 @@
 ;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
 ;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8
 
-(use-package auctex
+(use-package org-mind-map
+  :load-path "/home/mfauvel/.emacs.d/org-mind-map/"
+  )
+
+(use-package epresent
   :ensure t
+  )
+
+(use-package tex
+  :ensure auctex
   :mode ("\\.tex\\'" . latex-mode)
   :commands (latex-mode LaTeX-mode plain-tex-mode)
   :init
@@ -664,6 +652,7 @@
 		   "Fauvel Mathieu
 Director of the Engineering and Numerical Sciences Department
 Associated Editor IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing
+Associated Editor MDPI Remote Sensing
 Coordinator of the European IEEE GRSS Chapters
 
 http://fauvel.mathieu.free.fr
@@ -740,11 +729,13 @@ Phone: +33(0)5 34 32 39 22
   :ensure t
   :config (progn
 	    (elpy-enable)
-	    (setq python-shell-interpreter "jupyter"
-		  python-shell-interpreter-args "console --simple-prompt")
+	    (setq python-shell-interpreter "ipython"
+		  python-shell-interpreter-args "-i --simple-prompt")
 	    )
   )
 (setenv "PYTHONPATH" (shell-command-to-string "$SHELL -i -c 'echo $PYTHONPATH'"))
+
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 
 (use-package auto-complete
   :ensure t
@@ -776,14 +767,31 @@ Phone: +33(0)5 34 32 39 22
   :bind (("C-c f" . focus-mode))
   )
 
+(use-package emms-setup
+  :config
+  (emms-all)
+  (emms-default-players)
+  )
+
 (use-package emms
   :ensure t
-  :defer t
   :config (progn 
 	    (emms-all)
-	    (emms-default-players)
+	    (emms-history-load)	    
+	    (setq emms-source-file-directory-tree-function 'emms-source-file-directory-tree-find)
+	    (setq emms-source-file-default-directory "~/Musique/")
+	    (setq emms-player-list '(emms-player-vlc-playlist
+				     emms-player-vlc))
 	    )
-  )
+  :bind
+  (("C-c e p" . emms-previous)
+   ("C-c e n" . emms-next)
+   ("C-c e P" . emms-pause)
+   ("C-c e s" . emms-show)
+   ("C-c e k" . emms-stop)
+   ("C-c e +" . emms-volume-mode-plus)
+   ("C-c e -" . emms-volume-mode-minus)
+   ("C-c e S" . emms-play-playlist)))
 
 (use-package wttrin
   :ensure t
@@ -799,17 +807,15 @@ Phone: +33(0)5 34 32 39 22
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(org-emphasis-alist
-   (quote
-    (("*" bold)
+   '(("*" bold)
      ("/" italic)
      ("_" underline)
      ("=" org-verbatim verbatim)
      ("~" org-code verbatim)
      ("+"
-      (:strike-through t)))))
+      (:strike-through t))))
  '(package-selected-packages
-   (quote
-    (monokai wttrin volatile-highlights use-package telephone-line org-ref org-plus-contrib org-pdfview org-gcal neotree multiple-cursors move-text monokai-theme magit htmlize gnuplot focus exec-path-from-shell emms elpy dired-quick-sort diminish counsel calfw-org calfw auto-complete-auctex auctex))))
+   '(monokai wttrin volatile-highlights use-package telephone-line org-ref org-plus-contrib org-pdfview org-gcal neotree multiple-cursors move-text monokai-theme magit gnuplot focus exec-path-from-shell epresent emms elpy doom-themes dired-quick-sort diminish dashboard counsel calfw-org calfw auto-complete-auctex auctex)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
