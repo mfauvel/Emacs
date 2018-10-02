@@ -31,7 +31,7 @@
     windmove
     dashboard
     telephone-line
-    monokai
+    monokai-theme
     dired-quick-sort
     ;; Org mode
     org
@@ -234,6 +234,9 @@
 ;; Don't ask for confirmation to delete marked buffers
 (setq ibuffer-expert t)
 
+;; Visual mode line
+(global-visual-line-mode t)
+
 (use-package multiple-cursors
   :ensure t
   :defer t
@@ -318,6 +321,7 @@
   :config
   (setq ivy-count-format "(%d/%d) ")
   (setq ivy-use-virtual-buffers t)
+  (setq ivy-use-selectable-prompt t)
   ;; number of result lines to display
   (setq ivy-height 10)
   ;; does not count candidates
@@ -370,6 +374,21 @@
   :config (dashboard-setup-startup-hook)
   )
 
+(use-package winner
+  :if (not noninteractive)
+  :defer 5
+  :config
+  (winner-mode 1))
+
+(use-package windmove
+  ;; :defer 4
+  :ensure t
+  :config
+  ;; use command key on Mac
+  (windmove-default-keybindings 'M)
+  ;; wrap around at edges
+  (setq windmove-wrap-around t))
+
 (use-package org
   :mode (("\\.org$" . org-mode))
   :ensure org-plus-contrib
@@ -378,19 +397,23 @@
 	 ("C-c l" . org-store-link)
 	 ("C-c c" . org-capture))
   :config (progn
-	    (use-package org-install)
 	    (use-package ox)
             (use-package ox-beamer)
             (use-package ox-odt)
 	    (use-package ox-bibtex)
 	    (use-package ox-org)
 	    (use-package ox-extra)
-            
+            (use-package ob-ipython
+	      :ensure t
+	      :defer t)
 	    (setq org-log-done t)
 	    (setq org-startup-indented t)
 	    (setq org-agenda-files (list "~/Documents/Org_Files/calendar.org"
-                                     "~/Documents/Org_Files/todo.org"    
+					 "~/Documents/Org_Files/todo.org"
+					 "~/Documents/Org_Files/projects.org"
 					 ))
+
+	    (setq org-refile-targets '(("~/Documents/Org_Files/journal.org" :maxlevel . 3)))
                                          
 	    (setq org-export-htmlize-output-type 'css)
 	    (setq org-src-fontify-natively t)
@@ -401,7 +424,7 @@
             (setq org-odt-styles-file nil)
 	    (org-babel-do-load-languages
 	     'org-babel-load-languages
-	     '((python . t)
+	     '((ipython . t)
 	       (latex . t)
 	       (shell . t)
 	       (calc . t)
@@ -410,7 +433,9 @@
 	       (octave .t)
                (org .t)
 	       (lisp .t)))
+	    (setq org-babel-python-command "ipython")
 	    (setq org-latex-listings 'minted)
+        (add-to-list 'org-latex-minted-langs '(ipython "python"))
 	    (setq org-latex-minted-options
 		  '(("fontsize" "\\footnotesize")("obeytabs" "true")("tabsize" "4")("bgcolor" "bg")("breaklines" "true")))
 	    (setq org-latex-pdf-process
@@ -440,6 +465,45 @@
 			  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
 			  ("\\paragraph{%s}" . "\\paragraph*{%s}")
 			  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+	    (add-to-list 'org-latex-classes
+			 '("koma-book"
+			   "\\documentclass{scrbook}
+                \\usepackage{array}
+                \\usepackage[utf8]{inputenc}                   
+                \\usepackage[T1]{fontenc}
+                \\usepackage{lmodern}
+                \\usepackage[normalem]{ulem}
+                \\usepackage{booktabs}
+                \\usepackage{amsmath,amssymb,amsthm}
+                \\PassOptionsToPackage{hyphens}{url}
+                \\usepackage{hyperref}\\hypersetup{colorlinks=true,hypertexnames=false}
+                \\usepackage[osf,sc]{mathpazo}
+                \\usepackage{booktabs}
+                \\usepackage{graphicx}
+                \\usepackage{csquotes}
+                \\usepackage[usenames,dvipsnames]{xcolor}\\definecolor{bg}{rgb}{0.95,0.95,0.95}
+                [NO-DEFAULT-PACKAGES]
+                [EXTRA]"
+			   ("\\part{%s}" . "\\part*{%s}")
+			   ("\\chapter{%s}" . "\\chapter*{%s}")
+			   ("\\section{%s}" . "\\section*{%s}")
+			   ("\\subsection{%s}" . "\\subsection*{%s}")
+			   ;; ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+			   ("\\paragraph{%s}" . "\\paragraph*{%s}")
+			   ;; ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+			   ))
+	    (add-to-list 'org-latex-classes
+          '("memoir"
+             "\\documentclass{memoir}
+                 [NO-DEFAULT-PACKAGES]
+                 [EXTRA]"
+             ("\\part{%s}" . "\\part*{%s}")
+             ("\\chapter{%s}" . "\\chapter*{%s}")
+             ("\\section{%s}" . "\\section*{%s}")
+             ("\\subsection{%s}" . "\\subsection*{%s}")
+             ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+             ("\\paragraph{%s}" . "\\paragraph*{%s}")
+             ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 	   
 	    (add-to-list 'org-latex-classes
 			 '("ieeetran"
@@ -498,12 +562,14 @@
 	    (setq org-capture-templates
 		  '(("t" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
 		     "* %U %?\n")
-		     ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
-                     "* %?\n\n%^T\n\n:PROPERTIES:\n\n:END:\n\n")
-		    ("w" "Daily" entry (file+datetree "~/Documents/Org_Files/dailywork.org")
-		     "* %?\n:PROPERTIES:\n:PROJECT: \n:END:" :clock-in t :clock-keep t)
+		    ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
+                     "* %?\n %^T\n\n")
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
-		     "* %U %?\n")))
+		     "* %U %?\n")
+		     ("j" "Journal Entry" entry (file+datetree "~/Documents/Org_Files/journal.org")
+		      "* %? %^{Effort}p %^{TASK}p"
+		      :empty-lines 1)
+		     ))
 	    
 
 	    ;; System locale to use for formatting time values.
@@ -530,16 +596,19 @@
 
 (use-package org-ref
   :ensure t
-  :init (setq org-ref-completion-library 'org-ref-ivy-cite)
-  :config ((setq reftex-default-bibliography '("/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/references.bib"))
-	   (setq org-ref-bibliography-notes "/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/notes.org"
-		 org-ref-default-bibliography '("/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/references.bib")
-		 org-ref-pdf-directory "/home/mfauvel/Documents/Recherche/ENSAT/Bibliographie/bibtex-pdfs/")
-	   (unless (file-exists-p org-ref-pdf-directory)
-	     (make-directory org-ref-pdf-directory t))
-	   
-	     (setq helm-bibtex-pdf-open-function 'org-open-file)
-	   )
+  :init
+  (setq org-ref-completion-library 'org-ref-ivy-cite)
+  (setq reftex-default-bibliography '("/home/mfauvel/Documents/Recherche/INRA/Rapport/Bibliography/references.bib"))
+  (setq org-ref-bibliography-notes "/home/mfauvel/Documents/Recherche/INRA/Rapport/Bibliography/notes.org"
+	org-ref-default-bibliography '("/home/mfauvel/Documents/Recherche/INRA/Rapport/Bibliography/references.bib")
+	org-ref-pdf-directory "/home/mfauvel/Documents/Recherche/INRA/Rapport/Bibliography/Pdfs/")
+  (setq bibtex-autokey-year-length 4
+        bibtex-autokey-name-year-separator "-"
+        bibtex-autokey-year-title-separator "-"
+        bibtex-autokey-titleword-separator "-"
+        bibtex-autokey-titlewords 2
+        bibtex-autokey-titlewords-stretch 1
+        bibtex-autokey-titleword-length 5)
   )
 
 (use-package calfw
@@ -565,17 +634,35 @@
 	    )
   )
 (add-hook 'org-agenda-mode-hook (lambda () (org-gcal-sync) ))
-(add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
+;; (add-hook 'org-capture-after-finalize-hook (lambda () (org-gcal-sync) ))
 ;;ID  680696705562-lrj1fk1nha7i6squ4uolhvd4ikj4va72.apps.googleusercontent.com
 ;; secret  eqo-Bh1VFGPy-yz2PdOLgVyI 4/Q_7-MLMMu-ecTIKXq8VAihLPXBaJKPx9tu6mt3_r1I8
 
 (use-package org-mind-map
-  :load-path "/home/mfauvel/.emacs.d/org-mind-map/"
+  ;; :load-path "/home/mfauvel/.emacs.d/org-mind-map/"
+  :init  (require 'ox-org)
+  :ensure t
+  ;; Uncomment the below if 'ensure-system-packages` is installed
+  ;;:ensure-system-package (gvgen . graphviz)
+  :config
+  ;; (setq org-mind-map-engine "dot")       ; Default. Directed Graph
+  ;; (setq org-mind-map-engine "neato")  ; Undirected Spring Graph
+  ;; (setq org-mind-map-engine "twopi")  ; Radial Layout
+  ;; (setq org-mind-map-engine "fdp")    ; Undirected Spring Force-Directed 
+  ;; (setq org-mind-map-engine "sfdp")   ; Multiscale version of fdp for the layout of large graphs
+  ;; (setq org-mind-map-engine "circo")  ; Circular Layout
+  (setq org-mind-map-include-text t)
   )
 
-(use-package epresent
+(use-package org-kanban
   :ensure t
-  )
+  :after org
+  :commands (org-kanban/initialize))
+
+(use-package auctex-latexmk
+  :defer t
+  :init
+  (add-hook 'LaTeX-mode-hook 'auctex-latexmk-setup))
 
 (use-package tex
   :ensure auctex
@@ -642,34 +729,34 @@
 	    ;; something about ourselves
 	    (setq mu4e-user-mail-address-list
 		  '(
-		    "mathieu.fauvel@ensat.fr"
+		    "mathieu.fauvel@inra.fr"
 		    )
-		  user-mail-address "mathieu.fauvel@ensat.fr"
-		  mu4e-reply-to-address "mathieu.fauvel@ensat.fr"
+		  user-mail-address "mathieu.fauvel@inra.fr"
+		  mu4e-reply-to-address "mathieu.fauvel@inra.fr"
 		  user-full-name  "Mathieu Fauvel"
 		  mu4e-compose-signature
 		  (concat
 		   "Fauvel Mathieu
-Director of the Engineering and Numerical Sciences Department
-Associated Editor IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing
-Associated Editor MDPI Remote Sensing
+Associated Editor IEEE Transactions on Geoscience and Remote Sensing
 Coordinator of the European IEEE GRSS Chapters
+Associated Editor MDPI Remote Sensing
 
 http://fauvel.mathieu.free.fr
 
-INP - ENSAT - DYNAFOR
-Avenue de l'Agrobiopole
-31326 Castanet-Tolosan, FRANCE.
-Phone: +33(0)5 34 32 39 22
+CESBIO (CNES/CNRS/UPS/IRD/INRA)
+18, avenue Edouard Belin
+31401 Toulouse Cedex 9, France
+
+E-mail : mathieu.fauvel@inra.fr
 "))
 	    (setq message-send-mail-function 'smtpmail-send-it
 		  starttls-use-gnutls t
-		  smtpmail-starttls-credentials '(("mail.inp-toulouse.fr" 587 nil nil))
+		  smtpmail-starttls-credentials '(("smtp.inra.fr" 465 nil nil))
 		  smtpmail-auth-credentials
-		  '(("mail.inp-toulouse.fr" 587 "mfauvel" nil))
-		  smtpmail-default-smtp-server "mail.inp-toulouse.fr"
-		  smtpmail-smtp-server "mail.inp-toulouse.fr"
-		  smtpmail-smtp-service 587
+		  '(("smtp.inra.fr" 465 "mfauvel" nil))
+		  smtpmail-default-smtp-server "smtp.inra.fr"
+		  smtpmail-smtp-server "smtp.inra.fr"
+		  smtpmail-smtp-service 465
 		  smtpmail-queue-mail  nil
 		  smtpmail-queue-dir  "~/Maildir/queue/cur")
 	    
@@ -800,25 +887,5 @@ Phone: +33(0)5 34 32 39 22
   :bind (("C-x w". wttrin))
   :init
   (setq wttrin-default-cities '("Toulouse"
-                                "Vicdessos")))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(org-emphasis-alist
-   '(("*" bold)
-     ("/" italic)
-     ("_" underline)
-     ("=" org-verbatim verbatim)
-     ("~" org-code verbatim)
-     ("+"
-      (:strike-through t))))
- '(package-selected-packages
-   '(monokai wttrin volatile-highlights use-package telephone-line org-ref org-plus-contrib org-pdfview org-gcal neotree multiple-cursors move-text monokai-theme magit gnuplot focus exec-path-from-shell epresent emms elpy doom-themes dired-quick-sort diminish dashboard counsel calfw-org calfw auto-complete-auctex auctex)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+                                "Vicdessos"))
+  (setq wttrin-default-accept-language '("Accept-Language" . "fr-Fr")))
