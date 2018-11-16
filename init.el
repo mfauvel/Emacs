@@ -374,20 +374,48 @@
   :config (dashboard-setup-startup-hook)
   )
 
-(use-package winner
-  :if (not noninteractive)
-  :defer 5
-  :config
-  (winner-mode 1))
+;; (use-package winner
+;;   :config
+;;   (progn
+;;     (setq winner-dont-bind-my-keys t) ;; default bindings conflict with org-mode
+;;     (global-set-key (kbd "C-c u") 'winner-undo)
+;;     (global-set-key (kbd "C-c r") 'winner-redo)
+;;     (winner-mode 1))
+;;   )
 
-(use-package windmove
-  ;; :defer 4
+;; (use-package windmove
+;;   ;; :defer 4
+;;   :ensure t
+;;   :config
+;;   ;; use command key
+;;   (windmove-default-keybindings 'M)
+;;   ;; wrap around at edges
+;;   (setq windmove-wrap-around t))
+
+(use-package avy
   :ensure t
-  :config
-  ;; use command key on Mac
-  (windmove-default-keybindings 'M)
-  ;; wrap around at edges
-  (setq windmove-wrap-around t))
+  )
+(use-package ace-window
+  :ensure t
+  :init
+  (bind-key "C-x o" 'ace-window)
+  :init
+  (setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+  (setq aw-background t)
+  )
+
+(use-package elfeed
+  :ensure   t
+  :config (progn
+	    (global-set-key (kbd "C-x e") 'elfeed)
+	    (setq elfeed-feeds
+		  '(("https://ieeexplore.ieee.org/rss/TOC36.XML" TGRS)
+                    ("https://ieeexplore.ieee.org/rss/TOC8859.XML" GRSL)
+		    )
+		  )
+	    (setq elfeed-search-title-max-width 150)
+	    )
+  )
 
 (use-package org
   :mode (("\\.org$" . org-mode))
@@ -412,13 +440,26 @@
 					 "~/Documents/Org_Files/todo.org"
 					 "~/Documents/Org_Files/projects.org"
 					 ))
+	    (setq org-agenda-custom-commands 
+		  '(("P" "Parcelle" tags-todo "@parcelle TODO|INPROGRESS"
+		     ((org-agenda-overriding-header "Parcelle")))
+		    ("M" "Journée Machine Learning" tags-todo "@jmlomp TODO|INPROGRESS"
+		     ((org-agenda-overriding-header "Machine Learning OMP")))
+		    ("I" "INRA" tags-todo "@inra TODO|INPROGRESS"
+		     ((org-agenda-overriding-header "INRA")))
+		    ("R" "Review" tags-todo "@review TODO|INPROGRESS"
+		     ((org-agenda-overriding-header "Review")))
+		    ("G" "Grss" tags-todo "@grss TODO|INPROGRESS"
+		     ((org-agenda-overriding-header "GRSS")))
+		    ))
 
-	    (setq org-refile-targets '(("~/Documents/Org_Files/journal.org" :maxlevel . 3)))
+	    (setq org-refile-targets '(("~/Documents/Org_Files/journal.org" :maxlevel . 4)))
                                          
 	    (setq org-export-htmlize-output-type 'css)
 	    (setq org-src-fontify-natively t)
 	    (setq org-src-preserve-indentation t)
             (setq org-confirm-babel-evaluate nil)
+	    (setq org-export-babel-evaluate nil)
 
 	    (setq org-odt-data-dir "/usr/share/emacs/24.4/etc/org/")
             (setq org-odt-styles-file nil)
@@ -560,15 +601,18 @@
 	    
 	    ;; Set capture mode ORG-MODE
 	    (setq org-capture-templates
-		  '(("t" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
-		     "* %U %?\n")
+		  '(("T" "Todo" entry (file+headline "~/Documents/Org_Files/todo.org" "Tasks")
+		     "* TODO %? %^G %^{Effort}p %^{TASK}p"		     
+		     :empty-lines 1)
 		    ("c" "Calendar Pro" entry (file "~/Documents/Org_Files/calendar.org")
-                     "* %?\n %^T\n\n")
+                     "* %?\n %^T"
+		     :empty-lines 1)
 		    ("m" "Mail" entry (file+headline "~/Documents/Org_Files/todo.org" "Mails")
-		     "* %U %?\n")
-		     ("j" "Journal Entry" entry (file+datetree "~/Documents/Org_Files/journal.org")
-		      "* %? %^{Effort}p %^{TASK}p"
-		      :empty-lines 1)
+		     "* %U %?"
+		     :empty-lines 1)
+		    ("j" "Journal Entry" entry (file+datetree "~/Documents/Org_Files/journal.org")
+		     "* %? %^{Effort}p %^{TASK}p"
+		     :empty-lines 1)
 		     ))
 	    
 
@@ -609,6 +653,8 @@
         bibtex-autokey-titlewords 2
         bibtex-autokey-titlewords-stretch 1
         bibtex-autokey-titleword-length 5)
+  (global-set-key (kbd "C-c )") 'org-ref-ivy-insert-ref-link)
+  (global-set-key (kbd "C-c ]") 'org-ref-ivy-insert-cite-link)
   )
 
 (use-package calfw
@@ -739,7 +785,7 @@
 		   "Fauvel Mathieu
 Associated Editor IEEE Transactions on Geoscience and Remote Sensing
 Coordinator of the European IEEE GRSS Chapters
-Associated Editor MDPI Remote Sensing
+Editorial Board Member MDPI Remote Sensing
 
 http://fauvel.mathieu.free.fr
 
@@ -764,7 +810,7 @@ E-mail : mathieu.fauvel@inra.fr
 	    (setq message-kill-buffer-on-exit t)
 	    (setq mu4e-view-prefer-html t)
 	    (setq mu4e-compose-dont-reply-to-self t)
-
+	    
 	    ;; Only to reflow my paragraphs
 	    (setq mu4e-compose-format-flowed t)
 
@@ -808,6 +854,9 @@ E-mail : mathieu.fauvel@inra.fr
 
 	    ;; Multiple attachments
 	    (setq mu4e-save-multiple-attachments-without-asking t)
+
+	    ;; View forwarded message
+	    (setq mu4e-view-use-gnus t)
 	    
 	    )
   )
@@ -848,11 +897,11 @@ E-mail : mathieu.fauvel@inra.fr
   :init (add-hook 'prog-mode-hook #'hs-minor-mode)
   )
 
-(use-package focus
+(use-package projectile
   :ensure t
-  :defer t
-  :bind (("C-c f" . focus-mode))
-  )
+  :config
+  (projectile-global-mode)
+  (setq projectile-completion-system 'ivy))
 
 (use-package emms-setup
   :config
